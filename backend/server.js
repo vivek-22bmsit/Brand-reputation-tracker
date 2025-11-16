@@ -16,13 +16,23 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-    methods: ['GET', 'POST']
+    origin: [
+      'http://localhost:5173',
+      'https://brand-reputation-tracker.netlify.app'
+    ],
+    methods: ['GET', 'POST'],
+    credentials: true
   }
 });
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: [
+    'http://localhost:5173',
+    'https://brand-reputation-tracker.netlify.app'
+  ],
+  credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
