@@ -97,6 +97,66 @@ function TrendsPage({ brand }) {
     percentage: ((item.count / stats?.total) * 100).toFixed(1)
   })) || [];
 
+  // Export report function
+  const handleExportReport = () => {
+    if (!stats || chartData.length === 0) {
+      alert('No data available to export. Please wait for data collection.');
+      return;
+    }
+
+    // Generate CSV content
+    let csvContent = '';
+
+    // Header
+    csvContent += `Brand Reputation Tracker - Trends & Analytics Report\n`;
+    csvContent += `Brand: ${brand.name}\n`;
+    csvContent += `Report Generated: ${format(new Date(), 'PPpp')}\n`;
+    csvContent += `Period: Last 7 Days\n\n`;
+
+    // Summary Statistics
+    csvContent += `===== SUMMARY STATISTICS =====\n`;
+    csvContent += `Total Mentions,${stats?.total || 0}\n`;
+    csvContent += `Positive,${pieData.find(d => d.name === 'Positive')?.value || 0} (${pieData.find(d => d.name === 'Positive')?.percentage || 0}%)\n`;
+    csvContent += `Neutral,${pieData.find(d => d.name === 'Neutral')?.value || 0} (${pieData.find(d => d.name === 'Neutral')?.percentage || 0}%)\n`;
+    csvContent += `Negative,${pieData.find(d => d.name === 'Negative')?.value || 0} (${pieData.find(d => d.name === 'Negative')?.percentage || 0}%)\n\n`;
+
+    // Trend Changes
+    csvContent += `===== TREND CHANGES (vs yesterday) =====\n`;
+    csvContent += `Metric,Direction,Change\n`;
+    csvContent += `Volume,${volumeTrend.direction},${volumeTrend.change}%\n`;
+    csvContent += `Positive Sentiment,${positiveTrend.direction},${positiveTrend.change}%\n`;
+    csvContent += `Neutral Sentiment,${neutralTrend.direction},${neutralTrend.change}%\n`;
+    csvContent += `Negative Sentiment,${negativeTrend.direction},${negativeTrend.change}%\n\n`;
+
+    // Daily Trend Data
+    csvContent += `===== DAILY TREND DATA =====\n`;
+    csvContent += `Date,Total Mentions,Positive,Neutral,Negative\n`;
+    chartData.forEach(day => {
+      csvContent += `${day.date},${day.total},${day.positive},${day.neutral},${day.negative}\n`;
+    });
+    csvContent += `\n`;
+
+    // Source Breakdown
+    csvContent += `===== SOURCE BREAKDOWN =====\n`;
+    csvContent += `Source,Mentions,Percentage\n`;
+    sourceData.forEach(source => {
+      csvContent += `${source.name},${source.mentions},${source.percentage}%\n`;
+    });
+
+    // Create and download file
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${brand.name}_Trends_Report_${format(new Date(), 'yyyy-MM-dd')}.csv`);
+    link.style.visibility = 'hidden';
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -109,7 +169,10 @@ function TrendsPage({ brand }) {
           <button className="px-4 py-2 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-all font-medium text-gray-700">
             Last 7 Days
           </button>
-          <button className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all font-medium shadow-sm">
+          <button
+            onClick={handleExportReport}
+            className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all font-medium shadow-sm"
+          >
             Export Report
           </button>
         </div>
