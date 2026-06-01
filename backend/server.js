@@ -14,12 +14,17 @@ import errorHandler from './src/middleware/errorHandler.js';
 
 const app = express();
 const httpServer = createServer(app);
+
+// Configure CORS origins
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:5174',
+  process.env.FRONTEND_URL
+].filter(Boolean);
+
 const io = new Server(httpServer, {
   cors: {
-    origin: [
-      'http://localhost:5173',
-      'https://brand-reputation-tracker.netlify.app'
-    ],
+    origin: allowedOrigins,
     methods: ['GET', 'POST'],
     credentials: true
   }
@@ -27,10 +32,7 @@ const io = new Server(httpServer, {
 
 // Middleware
 app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'https://brand-reputation-tracker.netlify.app'
-  ],
+  origin: allowedOrigins,
   credentials: true
 }));
 app.use(express.json());
@@ -45,6 +47,15 @@ app.get('/', (req, res) => {
     message: 'Brand Reputation Tracker API',
     version: '1.0.0',
     status: 'running'
+  });
+});
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
   });
 });
 
